@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colamado Fresh</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>body{font-family:system-ui,sans-serif}.hidden{display:none}</style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+<header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-10">
+  <div class="max-w-2xl mx-auto flex justify-between items-center">
+    <h1 class="text-lg font-bold" data-key="appTitle">Store Cash & Inventory</h1>
+    <button onclick="toggleLang()" class="bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded text-sm font-semibold">🌐 EN / ES</button>
+  </div>
+</header>
+
+<nav class="max-w-2xl mx-auto bg-white shadow-sm flex justify-around p-2 mt-2 rounded-lg mx-2 overflow-x-auto text-xs">
+  <button onclick="showView('dashboard')" class="nav-btn py-2 px-2 text-blue-600 border-b-2 border-blue-600 whitespace-nowrap font-semibold" data-key="navDashboard">Dashboard</button>
+  <button onclick="showView('sale')" class="nav-btn py-2 px-2 text-gray-500 whitespace-nowrap font-semibold" data-key="navSale">+ Sale</button>
+  <button onclick="showView('expense')" class="nav-btn py-2 px-2 text-gray-500 whitespace-nowrap font-semibold" data-key="navExpense">+ Expense</button>
+  <button onclick="showView('inventory')" class="nav-btn py-2 px-2 text-gray-500 whitespace-nowrap font-semibold" data-key="navInventory">Inventory</button>
+  <button onclick="showView('products')" class="nav-btn py-2 px-2 text-gray-500 whitespace-nowrap font-semibold" data-key="navProducts">Products</button>
+  <button onclick="showView('ledger')" class="nav-btn py-2 px-2 text-gray-500 whitespace-nowrap font-semibold" data-key="navLedger">Ledger</button>
+</nav>
+
+<main class="max-w-2xl mx-auto p-4">
+
+  <div id="view-dashboard" class="view">
+    <div class="bg-white p-6 rounded-xl shadow-md text-center mb-4">
+      <h2 class="text-gray-500 text-sm uppercase" data-key="lblBalance">Current Cash Balance</h2>
+      <p class="text-4xl font-bold text-green-600 mt-2" id="display-balance">$0.00</p>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <button onclick="showView('sale')" class="bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl shadow font-bold" data-key="btnSale">💵 Log Sale</button>
+      <button onclick="showView('expense')" class="bg-red-500 hover:bg-red-600 text-white p-4 rounded-xl shadow font-bold" data-key="btnExpense">🧾 Log Expense</button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-4 mb-6 text-left">
+      <h3 class="font-bold text-gray-700 mb-2" data-key="lblHowTo">How to use</h3>
+      <ol class="list-decimal list-inside space-y-1 text-sm text-gray-600 text-left">
+        <li data-key="instr1">Add products once in the Products tab (scan or type the barcode).</li>
+        <li data-key="instr2">Log Sale when you take money in.</li>
+        <li data-key="instr3">Log Expense when stock arrives — scan the barcode, set quantity, snap the receipt.</li>
+        <li data-key="instr4">Check Inventory to see what you have on hand.</li>
+        <li data-key="instr5">Use the Ledger to review history. Mistakes are fixed with Reverse, never deleted.</li>
+      </ol>
+    </div>
+
+    <div>
+      <h3 class="font-bold text-gray-700 mb-2" data-key="lblRecent">Recent Activity</h3>
+      <div id="recent-activity" class="bg-white rounded-lg shadow overflow-hidden"></div>
+    </div>
+  </div>
+
+  <div id="view-sale" class="view hidden">
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4 text-green-600" data-key="titleSale">Log New Sale</h2>
+      <form onsubmit="handleSaleSubmit(event)" class="space-y-4">
+        <div><label class="block text-sm font-medium mb-1" data-key="lblAmount">Amount ($)</label>
+          <input type="number" step="0.01" name="amount" required data-ph="phAmount" class="w-full p-3 border rounded-lg text-lg"></div>
+        <div><label class="block text-sm font-medium mb-1" data-key="lblCategory">Category</label>
+          <select name="category" class="w-full p-3 border rounded-lg">
+            <option data-key="catDailyReg">Daily Register</option>
+            <option data-key="catCatering">Catering Order</option>
+          </select></div>
+        <div><label class="block text-sm font-medium mb-1" data-key="lblNote">Note (optional)</label>
+          <input type="text" name="note" data-ph="phNote" class="w-full p-3 border rounded-lg"></div>
+        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg" data-key="btnSave">Save Sale</button>
+        <button type="button" onclick="showView('dashboard')" class="w-full text-gray-500 py-2" data-key="btnCancel">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="view-expense" class="view hidden">
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4 text-red-600" data-key="titleExpense">Log New Expense</h2>
+      <form onsubmit="handleExpenseSubmit(event)" class="space-y-4">
+        <div><label class="block text-sm font-medium mb-1" data-key="lblAmount2">Amount ($)</label>
+          <input type="number" step="0.01" name="amount" required data-ph="phAmount" class="w-full p-3 border rounded-lg text-lg"></div>
+        <div><label class="block text-sm font-medium mb-1" data-key="lblProduct">Product</label>
+          <div class="flex gap-2">
+            <select name="product" id="expense-product" onchange="autoFillUnit(this.value)" class="flex-1 p-3 border rounded-lg"></select>
+            <button type="button" onclick="startBarcodeScan()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 rounded-lg font-bold" data-key="btnScan">📷 Scan</button>
+          </div>
+          <div id="barcode-reader-container" class="hidden mt-3"><div id="barcode-reader"></div>
+            <button type="button" onclick="stopBarcodeScan()" class="mt-2 w-full bg-gray-500 text-white py-2 rounded-lg" data-key="btnStopScan">Stop Scanning</button></div></div>
+        <div class="grid grid-cols-2 gap-3 bg-blue-50 p-3 rounded-lg">
+          <div><label class="block text-sm font-medium text-blue-800 mb-1" data-key="lblQty">Qty Received</label>
+            <input type="number" step="0.1" name="quantity" data-ph="phQty" class="w-full p-2 border rounded-lg"></div>
+          <div><label class="block text-sm font-medium text-blue-800 mb-1" data-key="lblUnit">Unit</label>
+            <input type="text" name="unit" data-ph="phUnit" class="w-full p-2 border rounded-lg"></div>
+        </div>
+        <p class="text-xs text-gray-500 -mt-2" data-key="lblNoInvHint">Leave quantity blank for rent or utilities (no stock).</p>
+        <div><label class="block text-sm font-medium mb-1" data-key="lblReceipt">Receipt Photo 📷</label>
+          <input type="file" accept="image/*" capture="environment" name="receipt" class="w-full p-2 border rounded-lg bg-gray-50"></div>
+        <div><label class="block text-sm font-medium mb-1" data-key="lblNote2">Note (optional)</label>
+          <input type="text" name="note" data-ph="phNote" class="w-full p-3 border rounded-lg"></div>
+        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg" data-key="btnSave2">Save Expense</button>
+        <button type="button" onclick="showView('dashboard')" class="w-full text-gray-500 py-2" data-key="btnCancel2">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="view-products" class="view hidden">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-4">
+      <div class="p-4 bg-purple-600 text-white"><h2 class="font-bold text-lg" data-key="titleProducts">Product Catalog</h2>
+        <p class="text-xs mt-1" data-key="lblProductsSub">Add each product once</p></div>
+      <div class="p-4"><form onsubmit="addProduct(event)" class="space-y-3">
+        <div><label class="block text-sm font-medium mb-1" data-key="lblProdName">Product Name</label>
+          <input type="text" name="name" required class="w-full p-2 border rounded-lg"></div>
+        <div><label class="block text-sm font-medium mb-1" data-key="lblProdBarcode">Barcode (optional)</label>
+          <div class="flex gap-2"><input type="text" name="barcode" data-ph="phBarcode" class="flex-1 p-2 border rounded-lg">
+            <button type="button" onclick="startProductScan()" class="bg-purple-600 text-white px-3 rounded-lg font-bold" data-key="btnScanProd">📷</button></div>
+          <div id="product-barcode-reader-container" class="hidden mt-2"><div id="product-barcode-reader"></div>
+            <button type="button" onclick="stopProductScan()" class="mt-2 w-full bg-gray-500 text-white py-1 rounded-lg text-sm" data-key="btnStopProd">Stop</button></div></div>
+        <div><label class="block text-sm font-medium mb-1" data-key="lblProdUnit">Default Unit</label>
+          <input type="text" name="unit" data-ph="phUnit" class="w-full p-2 border rounded-lg"></div>
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg" data-key="btnAddProd">Add Product</button>
+      </form></div>
+    </div>
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+      <div class="p-4 bg-gray-100 border-b"><h3 class="font-bold" data-key="titleProdList">Your Products</h3></div>
+      <div class="overflow-x-auto"><table class="w-full text-sm">
+        <thead class="bg-gray-50 text-xs uppercase"><tr>
+          <th class="px-4 py-3 text-left" data-key="thName">Name</th>
+          <th class="px-4 py-3 text-left" data-key="thBarcode">Barcode</th>
+          <th class="px-4 py-3 text-left" data-key="thUnit2">Unit</th>
+          <th class="px-4 py-3 text-center" data-key="thAction2">Action</th></tr></thead>
+        <tbody id="products-body" class="divide-y"></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="view-inventory" class="view hidden">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+      <div class="p-4 bg-indigo-600 text-white"><h2 class="font-bold text-lg" data-key="titleInv">Current Inventory</h2></div>
+      <div class="overflow-x-auto"><table class="w-full text-sm">
+        <thead class="bg-gray-50 text-xs uppercase"><tr>
+          <th class="px-4 py-3 text-left" data-key="thItem">Item</th>
+          <th class="px-4 py-3 text-center" data-key="thQty">Quantity</th>
+          <th class="px-4 py-3 text-left" data-key="thUnit3">Unit</th>
+          <th class="px-4 py-3 text-left" data-key="thLast">Last Restocked</th></tr></thead>
+        <tbody id="inventory-body" class="divide-y"></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="view-ledger" class="view hidden">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+      <div class="p-4 bg-gray-100 border-b flex justify-between items-center">
+        <h2 class="font-bold" data-key="titleLedger">Transaction Ledger</h2>
+        <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded" data-key="lblImmutable">🔒 Immutable</span></div>
+      <div class="overflow-x-auto"><table class="w-full text-sm">
+        <thead class="bg-gray-50 text-xs uppercase"><tr>
+          <th class="px-4 py-3 text-left" data-key="thDate">Date</th>
+          <th class="px-4 py-3 text-left" data-key="thType">Type</th>
+          <th class="px-4 py-3 text-left" data-key="thDesc">Description</th>
+          <th class="px-4 py-3 text-right" data-key="thAmount2">Amount</th>
+          <th class="px-4 py-3 text-center" data-key="thAction3">Action</th></tr></thead>
+        <tbody id="ledger-body" class="divide-y"></tbody></table></div>
+    </div>
+    <div class="mt-6 bg-white rounded-xl shadow-md overflow-hidden">
+      <div class="p-4 bg-gray-800 text-white"><h2 class="font-bold" data-key="titleAudit">🛡️ Audit Trail</h2></div>
+      <div class="p-4 max-h-60 overflow-y-auto"><ul id="audit-body" class="space-y-2 text-xs text-gray-600 font-mono"></ul></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const i18n={
+ en:{appTitle:"Store Cash & Inventory",navDashboard:"Dashboard",navSale:"+ Sale",navExpense:"+ Expense",navInventory:"Inventory",navProducts:"Products",navLedger:"Ledger",
+  lblBalance:"Current Cash Balance",btnSale:"💵 Log Sale",btnExpense:"🧾 Log Expense",lblHowTo:"How to use",
+  instr1:"Add products once in the Products tab (scan or type the barcode).",instr2:"Log Sale when you take money in.",instr3:"Log Expense when stock arrives — scan the barcode, set quantity, snap the receipt.",instr4:"Check Inventory to see what you have on hand.",instr5:"Use the Ledger to review history. Mistakes are fixed with Reverse, never deleted.",lblRecent:"Recent Activity",
+  titleSale:"Log New Sale",lblAmount:"Amount ($)",lblCategory:"Category",catDailyReg:"Daily Register",catCatering:"Catering Order",lblNote:"Note (optional)",btnSave:"Save Sale",btnCancel:"Cancel",phAmount:"0.00",phNote:"Optional note",
+  titleExpense:"Log New Expense",lblAmount2:"Amount ($)",lblProduct:"Product",btnScan:"📷 Scan",btnStopScan:"Stop Scanning",lblQty:"Qty Received",lblUnit:"Unit",lblNoInvHint:"Leave quantity blank for rent or utilities (no stock).",lblReceipt:"Receipt Photo 📷",lblNote2:"Note (optional)",btnSave2:"Save Expense",btnCancel2:"Cancel",phQty:"e.g. 5",phUnit:"e.g. Bags",
+  titleProducts:"Product Catalog",lblProductsSub:"Add each product once",lblProdName:"Product Name",lblProdBarcode:"Barcode (optional)",btnScanProd:"📷",btnStopProd:"Stop",lblProdUnit:"Default Unit",btnAddProd:"Add Product",titleProdList:"Your Products",thName:"Name",thBarcode:"Barcode",thUnit2:"Unit",thAction2:"Action",btnDelete:"Delete",emptyProd:"No products yet. Add one above.",phBarcode:"e.g. 123456789",
+  titleInv:"Current Inventory",thItem:"Item",thQty:"Quantity",thUnit3:"Unit",thLast:"Last Restocked",emptyInv:"No inventory tracked yet.",
+  titleLedger:"Transaction Ledger",lblImmutable:"🔒 Immutable",thDate:"Date",thType:"Type",thDesc:"Description",thAmount2:"Amount",thAction3:"Action",btnReverse:"Reverse",lblReversed:"REVERSED",titleAudit:"🛡️ Audit Trail",emptyLedger:"No transactions yet.",
+  alertSaved:"Saved successfully!",alertProductAdded:"Product added!",alertScanned:"Barcode scanned: ",alertNotFound:"No product with this barcode. Add it in the Products tab first.",alertReverseConfirm:"Sure? This adds a correcting entry. The original stays visible."},
+ es:{appTitle:"Caja e Inventario",navDashboard:"Panel",navSale:"+ Venta",navExpense:"+ Gasto",navInventory:"Inventario",navProducts:"Productos",navLedger:"Registro",
+  lblBalance:"Saldo Actual en Caja",btnSale:"💵 Registrar Venta",btnExpense:"🧾 Registrar Gasto",lblHowTo:"Cómo usar",
+  instr1:"Agrega los productos una vez en la pestaña Productos (escanea o escribe el código).",instr2:"Registra una Venta cuando entra dinero.",instr3:"Registra un Gasto cuando llega mercancía — escanea el código, pon la cantidad y toma foto del recibo.",instr4:"Revisa Inventario para ver lo que tienes.",instr5:"Usa el Registro para ver la historia. Los errores se corrigen con Revertir, nunca se borran.",lblRecent:"Actividad Reciente",
+  titleSale:"Registrar Nueva Venta",lblAmount:"Monto ($)",lblCategory:"Categoría",catDailyReg:"Registro Diario",catCatering:"Pedido de Catering",lblNote:"Nota (opcional)",btnSave:"Guardar Venta",btnCancel:"Cancelar",phAmount:"0.00",phNote:"Nota opcional",
+  titleExpense:"Registrar Nuevo Gasto",lblAmount2:"Monto ($)",lblProduct:"Producto",btnScan:"📷 Escanear",btnStopScan:"Detener Escaneo",lblQty:"Cant. Recibida",lblUnit:"Unidad",lblNoInvHint:"Deja la cantidad en blanco para renta o servicios (sin inventario).",lblReceipt:"Foto del Recibo 📷",lblNote2:"Nota (opcional)",btnSave2:"Guardar Gasto",btnCancel2:"Cancelar",phQty:"ej. 5",phUnit:"ej. Bolsas",
+  titleProducts:"Catálogo de Productos",lblProductsSub:"Agrega cada producto una vez",lblProdName:"Nombre del Producto",lblProdBarcode:"Código de Barras (opcional)",btnScanProd:"📷",btnStopProd:"Detener",lblProdUnit:"Unidad Predeterminada",btnAddProd:"Agregar Producto",titleProdList:"Tus Productos",thName:"Nombre",thBarcode:"Código",thUnit2:"Unidad",thAction2:"Acción",btnDelete:"Borrar",emptyProd:"Sin productos. Agrega uno arriba.",phBarcode:"ej. 123456789",
+  titleInv:"Inventario Actual",thItem:"Artículo",thQty:"Cantidad",thUnit3:"Unidad",thLast:"Último Reabastecimiento",emptyInv:"Sin inventario registrado.",
+  titleLedger:"Libro Mayor",lblImmutable:"🔒 Inmutable",thDate:"Fecha",thType:"Tipo",thDesc:"Descripción",thAmount2:"Monto",thAction3:"Acción",btnReverse:"Revertir",lblReversed:"REVERTIDO",titleAudit:"🛡️ Registro de Auditoría",emptyLedger:"Sin transacciones.",
+  alertSaved:"¡Guardado!",alertProductAdded:"¡Producto agregado!",alertScanned:"Código escaneado: ",alertNotFound:"No hay producto con este código. Agrégalo primero en Productos.",alertReverseConfirm:"¿Seguro? Se agrega un asiento correctivo. El original queda visible."}
+};
+let currentLang='en';
+let products=JSON.parse(localStorage.getItem('cf_products'))||[{name:'Coffee Beans',barcode:'123456789',unit:'Bags'},{name:'Cleaning Supplies',barcode:'987654321',unit:'Each'}];
+let transactions=JSON.parse(localStorage.getItem('cf_txns'))||[{id:'TXN-001',date:'2026-11-01',type:'Opening',category:'Daily Register',amount:650,note:'Starting cash',receipt:'',qty:0,unit:'',reversed:false},{id:'TXN-002',date:'2026-11-06',type:'Expense',category:'Coffee Beans',amount:85.5,note:'Weekly delivery',receipt:'',qty:5,unit:'Bags',reversed:false}];
+let inventory=JSON.parse(localStorage.getItem('cf_inv'))||[{item:'Coffee Beans',quantity:5,unit:'Bags',lastUpdated:'2026-11-06'}];
+let auditLog=JSON.parse(localStorage.getItem('cf_audit'))||[{time:'2026-11-01 08:00',action:'ADD',detail:'TXN-001: Opening $650.00'},{time:'2026-11-06 14:30',action:'ADD',detail:'TXN-002: Expense $85.50 | +5 Bags Coffee Beans'}];
+let scanner=null,prodScanner=null;
+
+function save(){localStorage.setItem('cf_products',JSON.stringify(products));localStorage.setItem('cf_txns',JSON.stringify(transactions));localStorage.setItem('cf_inv',JSON.stringify(inventory));localStorage.setItem('cf_audit',JSON.stringify(auditLog));renderAll();}
+function balance(){return transactions.reduce((s,t)=>{if(t.reversed)return s;return t.type==='Expense'?s-t.amount:s+t.amount;},0);}
+function audit(a,d){auditLog.unshift({time:new Date().toISOString().slice(0,16).replace('T',' '),action:a,detail:d});}
+function updInv(item,qty,unit,date){if(!qty||!unit)return;const e=inventory.find(i=>i.item===item);if(e){e.quantity+=parseFloat(qty);e.lastUpdated=date;}else inventory.push({item,quantity:parseFloat(qty),unit,lastUpdated:date});}
+
+function addProduct(ev){ev.preventDefault();const f=ev.target;products.push({name:f.name.value,barcode:f.barcode.value||'',unit:f.unit.value||'Each'});save();f.reset();alert(i18n[currentLang].alertProductAdded);}
+function deleteProduct(i){if(confirm('Delete?')){products.splice(i,1);save();}}
+
+function startBarcodeScan(){document.getElementById('barcode-reader-container').classList.remove('hidden');scanner=new Html5Qrcode('barcode-reader');scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:150}},txt=>{const p=products.find(x=>x.barcode===txt);if(p){document.getElementById('expense-product').value=p.name;autoFillUnit(p.name);stopBarcodeScan();alert(i18n[currentLang].alertScanned+p.name);}else alert(i18n[currentLang].alertNotFound);}).catch(e=>console.error(e));}
+function stopBarcodeScan(){if(scanner)scanner.stop().then(()=>document.getElementById('barcode-reader-container').classList.add('hidden'));}
+function startProductScan(){document.getElementById('product-barcode-reader-container').classList.remove('hidden');prodScanner=new Html5Qrcode('product-barcode-reader');prodScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:150}},txt=>{document.querySelector('#view-products input[name=barcode]').value=txt;stopProductScan();alert(i18n[currentLang].alertScanned+txt);}).catch(e=>console.error(e));}
+function stopProductScan(){if(prodScanner)prodScanner.stop().then(()=>document.getElementById('product-barcode-reader-container').classList.add('hidden'));}
+function autoFillUnit(name){const p=products.find(x=>x.name===name);if(p)document.querySelector('#view-expense input[name=unit]').value=p.unit;}
+
+function handleSaleSubmit(e){e.preventDefault();const f=e.target;const t={id:'TXN-'+Date.now().toString().slice(-6),date:new Date().toISOString().slice(0,10),type:'Sale',category:f.category.value,amount:parseFloat(f.amount.value),note:f.note.value,receipt:'',qty:0,unit:'',reversed:false};transactions.push(t);audit('ADD',t.id+': Sale $'+t.amount.toFixed(2));save();f.reset();alert(i18n[currentLang].alertSaved);showView('dashboard');}
+function handleExpenseSubmit(e){e.preventDefault();const f=e.target;const qty=parseFloat(f.quantity.value)||0,unit=f.unit.value.trim();const rec=f.receipt.files.length?f.receipt.files[0].name:'';const t={id:'TXN-'+Date.now().toString().slice(-6),date:new Date().toISOString().slice(0,10),type:'Expense',category:f.product.value||'Other',amount:parseFloat(f.amount.value),note:f.note.value,receipt:rec,qty,unit,reversed:false};transactions.push(t);let d=t.id+': Expense $'+t.amount.toFixed(2);if(qty>0&&unit){updInv(t.category,qty,unit,t.date);d+=' | +'+qty+' '+unit+' '+t.category;}audit('ADD',d);save();f.reset();alert(i18n[currentLang].alertSaved);showView('dashboard');}
+function reverse(id){const t=i18n[currentLang];if(!confirm(t.alertReverseConfirm))return;const o=transactions.find(x=>x.id===id);if(!o||o.reversed)return;const invQty=o.qty>0?-o.qty:0;const n={id:'TXN-'+Date.now().toString().slice(-6),date:new Date().toISOString().slice(0,10),type:o.type==='Sale'?'Expense':'Sale',category:o.category,amount:o.amount,note:'CORRECTION of '+id,receipt:'',qty:invQty,unit:o.unit,reversed:false};o.reversed=true;transactions.push(n);if(invQty!==0)updInv(o.category,invQty,o.unit,n.date);audit('REVERSE','Reversed '+id+' with '+n.id);save();}
+
+function toggleLang(){currentLang=currentLang==='en'?'es':'en';renderAll();}
+function applyLang(){const d=i18n[currentLang];document.querySelectorAll('[data-key]').forEach(el=>{if(d[el.dataset.key]!==undefined)el.textContent=d[el.dataset.key];});document.querySelectorAll('[data-ph]').forEach(el=>{if(d[el.dataset.ph]!==undefined)el.placeholder=d[el.dataset.ph];});}
+function showView(v){document.querySelectorAll('.view').forEach(el=>el.classList.add('hidden'));document.getElementById('view-'+v).classList.remove('hidden');document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.remove('text-blue-600','border-b-2','border-blue-600');b.classList.add('text-gray-500');});const a=document.querySelector('.nav-btn[onclick*="'+v+'"]');if(a){a.classList.add('text-blue-600','border-b-2','border-blue-600');a.classList.remove('text-gray-500');}}
+
+function renderAll(){
+  applyLang();const t=i18n[currentLang];
+  document.getElementById('display-balance').textContent='$'+balance().toFixed(2);
+  document.getElementById('expense-product').innerHTML='<option value="">-- '+t.lblProduct+' --</option>'+products.map(p=>'<option value="'+p.name+'">'+p.name+'</option>').join('');
+  document.getElementById('recent-activity').innerHTML=transactions.slice(-3).reverse().map(x=>'<div class="p-3 border-b flex justify-between '+(x.reversed?'bg-gray-100 line-through text-gray-400':'')+'"><div><p class="font-semibold">'+(x.type==='Sale'?'💵':x.type==='Expense'?'🧾':'🏦')+' '+x.category+'</p><p class="text-xs text-gray-500">'+x.date+(x.qty>0?' | +'+x.qty+' '+x.unit:'')+'</p></div><span class="font-bold '+(x.type==='Expense'?'text-red-600':'text-green-600')+'">'+(x.type==='Expense'?'-':'+')+'$'+x.amount.toFixed(2)+'</span></div>').join('')||'<p class="p-4 text-gray-500">'+t.emptyLedger+'</p>';
+  document.getElementById('products-body').innerHTML=products.map((p,i)=>'<tr><td class="px-4 py-3 font-medium">'+p.name+'</td><td class="px-4 py-3 font-mono text-xs">'+(p.barcode||'—')+'</td><td class="px-4 py-3">'+p.unit+'</td><td class="px-4 py-3 text-center"><button onclick="deleteProduct('+i+')" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">'+t.btnDelete+'</button></td></tr>').join('')||'<tr><td colspan="4" class="p-4 text-center text-gray-500">'+t.emptyProd+'</td></tr>';
+  document.getElementById('inventory-body').innerHTML=inventory.map(i=>'<tr><td class="px-4 py-3 font-medium">'+i.item+'</td><td class="px-4 py-3 text-center font-bold text-indigo-600">'+i.quantity+'</td><td class="px-4 py-3">'+i.unit+'</td><td class="px-4 py-3 text-xs text-gray-500">'+i.lastUpdated+'</td></tr>').join('')||'<tr><td colspan="4" class="p-4 text-center text-gray-500">'+t.emptyInv+'</td></tr>';
+  document.getElementById('ledger-body').innerHTML=transactions.slice().reverse().map(x=>'<tr class="'+(x.reversed?'bg-gray-100':'')+'"><td class="px-4 py-3 text-gray-600">'+x.date+'</td><td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs font-bold '+(x.type==='Sale'?'bg-green-100 text-green-800':x.type==='Expense'?'bg-red-100 text-red-800':'bg-blue-100 text-blue-800')+'">'+x.type+(x.reversed?' <small class="text-gray-500">('+t.lblReversed+')</small>':'')+'</span></td><td class="px-4 py-3"><p class="font-medium">'+x.category+'</p><p class="text-xs text-gray-500">'+(x.note||'')+(x.receipt?' 📎':'')+(x.qty>0?'<br><span class="text-indigo-600 font-semibold">+'+x.qty+' '+x.unit+'</span>':'')+'</p></td><td class="px-4 py-3 text-right font-bold '+(x.type==='Expense'?'text-red-600':'text-green-600')+'">'+(x.type==='Expense'?'-':'+')+'$'+x.amount.toFixed(2)+'</td><td class="px-4 py-3 text-center">'+(!x.reversed?'<button onclick="reverse(\''+x.id+'\')" class="text-xs bg-gray-200 px-2 py-1 rounded">'+t.btnReverse+'</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="5" class="p-4 text-center text-gray-500">'+t.emptyLedger+'</td></tr>';
+  document.getElementById('audit-body').innerHTML=auditLog.map(l=>'<li class="border-b pb-1"><span class="text-blue-600 font-bold">['+l.action+']</span> <span class="text-gray-400">'+l.time+'</span>: '+l.detail+'</li>').join('');
+}
+renderAll();
+</script>
+</body>
+</html>
